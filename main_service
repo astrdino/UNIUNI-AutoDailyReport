@@ -1,0 +1,693 @@
+import openpyxl
+from datetime import datetime, timedelta
+
+
+
+PATTERN_Bucket = [195,199,200,202,203,207,211,213,216,218,220,230,231]
+MARK_States = [202,211,231]
+DATEOFFSET = 11
+SHEET_Amt = 0 #Dates
+RootPath='e:/Project_WorkSpace/UniUni/AutoDailyReport/'
+
+
+# Get a date in the format "MM/DD/YYYY" from the user
+date_string = input("Enter report-generating date (MMDDYYYY): ")
+
+dl = [] #List of dates
+
+# Today_date_number = 0
+# Today_month_number = 0
+
+
+try:
+    # Parse the date string into a datetime object
+    Report_Date = datetime.strptime(date_string, "%m%d%Y")
+
+    DateTracking_Start = 1
+    DateTracking_End = 11
+
+    Prev_Date_4 = Report_Date - timedelta(days=DateTracking_Start)
+    Prev_Date_11 = Report_Date - timedelta(days=DateTracking_End)
+
+    dml = []
+    ddl = []
+  
+
+    for i in range(DateTracking_Start,DateTracking_End+1):
+        date = Report_Date - timedelta(days=i)
+        dml.append(date.month)
+        ddl.append(date.day)
+
+        dl = list(zip(dml,ddl))[::-1]
+        
+    # quit()
+
+
+    # Extract the month from the date and convert it to a number (1 through 12)
+    Today_month_number = Report_Date.month
+    Today_date_number = Report_Date.day
+    
+
+    # Print the original date and the associated month number
+    print(f"Report Date: {date_string}")
+
+    print(f"4-days-ago Date: {Prev_Date_4.day}")
+    print(f"11-days-ago Date: {Prev_Date_11.day}")
+
+    # print(date_number)
+    # print(f"Month number: {month_number}")
+except ValueError:
+    print("Invalid date format. Please use the format MM/DD/YYYY.")
+    quit()
+
+workbook_period_date_1 = openpyxl.load_workbook(RootPath+'Tests/order_lists_test_1.xlsx')
+workbook_period_date_2 = openpyxl.load_workbook(RootPath+'Tests/order_lists_test_2.xlsx')
+workbook_period_date_3 = openpyxl.load_workbook(RootPath+'Tests/order_lists_test_3.xlsx')
+workbook_period_date_4 = openpyxl.load_workbook(RootPath+'Tests/order_lists_test_4.xlsx')
+workbook_period_date_5 = openpyxl.load_workbook(RootPath+'Tests/order_lists_test_5.xlsx')
+workbook_period_date_6 = openpyxl.load_workbook(RootPath+'Tests/order_lists_test_6.xlsx')
+workbook_period_date_7 = openpyxl.load_workbook(RootPath+'Tests/order_lists_test_7.xlsx')
+
+
+workbook_single_date_1 = openpyxl.load_workbook(RootPath+'Tests/order_lists_test_8.xlsx')
+workbook_single_date_2 = openpyxl.load_workbook(RootPath+'Tests/order_lists_test_9.xlsx')
+workbook_single_date_3 = openpyxl.load_workbook(RootPath+'Tests/order_lists_test_10.xlsx')
+workbook_single_date_4 = openpyxl.load_workbook(RootPath+'Tests/order_lists_test_11.xlsx')
+
+# Select the sheet you want to read from
+sheet_period_date_1 = workbook_period_date_1['Order List']  
+sheet_period_date_2 = workbook_period_date_2['Order List']  
+sheet_period_date_3 = workbook_period_date_3['Order List']  
+sheet_period_date_4 = workbook_period_date_4['Order List']  
+sheet_period_date_5 = workbook_period_date_5['Order List']  
+sheet_period_date_6 = workbook_period_date_6['Order List']  
+sheet_period_date_7 = workbook_period_date_7['Order List']  
+
+sheet_single_date_1 = workbook_single_date_1['Order List']  
+sheet_single_date_2 = workbook_single_date_2['Order List'] 
+sheet_single_date_3 = workbook_single_date_3['Order List'] 
+sheet_single_date_4 = workbook_single_date_4['Order List'] 
+
+
+sheet_single_date_Bucket = []
+sheet_single_date_Bucket.append(workbook_single_date_1['Order List'])
+sheet_single_date_Bucket.append(workbook_single_date_2['Order List'])
+sheet_single_date_Bucket.append(workbook_single_date_3['Order List'])
+sheet_single_date_Bucket.append(workbook_single_date_4['Order List'])
+
+sheet_period_date_Bucket = []
+sheet_period_date_Bucket.append(workbook_period_date_1['Order List'])
+sheet_period_date_Bucket.append(workbook_period_date_2['Order List'])
+sheet_period_date_Bucket.append(workbook_period_date_3['Order List'])
+sheet_period_date_Bucket.append(workbook_period_date_4['Order List'])
+sheet_period_date_Bucket.append(workbook_period_date_5['Order List'])
+sheet_period_date_Bucket.append(workbook_period_date_6['Order List'])
+sheet_period_date_Bucket.append(workbook_period_date_7['Order List'])
+
+SHEET_Amt = len(sheet_single_date_Bucket) + len(sheet_period_date_Bucket)
+
+# print(SHEET_Amt)
+
+
+#General Counting Function
+def countState(sheet,flag):
+
+    # Define the cell range 
+    start_row = 1
+    end_row = sheet.max_row
+    column = 'C'
+
+
+    count = 0
+
+    PATTERN_Counts = []
+
+
+    for pat in PATTERN_Bucket:
+
+        for row in range(start_row, end_row + 1):
+
+            cell_value = sheet[f'{column}{row}'].value
+
+            if cell_value is not None and cell_value == pat:
+
+                count+=1
+
+        PATTERN_Counts.append(count)
+        count = 0
+
+
+
+    return PATTERN_Counts
+
+#Fetch Details if ALARM
+def pullDetails(sheet, targetStates,sheetId):
+
+    #this Sheet Date
+
+    daheads = list(range(1,SHEET_Amt+1,1))
+
+    daheads.reverse()
+
+    # print(sheetId)
+
+    this_s_date = Report_Date - timedelta(days=daheads[sheetId-1])
+
+    print("Alarm on the Sheet Day: "+ str(this_s_date.month)+"/" + str(this_s_date.day))
+    # print(daheads)
+    
+
+    
+
+
+    #Tracking Number
+    #Driver 
+
+    # Define the cell range 
+    start_row = 1
+    end_row = sheet.max_row
+
+    state_column = 'C'
+    tn_column = 'A'
+    driver_column = 'H'
+    batch_column = 'E'
+
+    tn_list = []
+    driver_list = []
+    batch_list = []
+
+    for s in targetStates:
+
+        for row in range(start_row, end_row + 1):
+
+            cell_value = sheet[f'{state_column}{row}'].value
+
+            if cell_value is not None and cell_value == s:
+
+                #Pulling up details
+                tn_list.append(sheet[f'{tn_column}{row}'].value)
+                driver_list.append(sheet[f'{driver_column}{row}'].value)
+                batch_list.append(sheet[f'{batch_column}{row}'].value)
+
+
+
+    #e.g. ([('UUS3B10533053460697', 160992)])
+    INFO_list = list(zip(tn_list,driver_list,batch_list))
+
+
+        # print(tn_list)
+    # print(driver_list)
+
+    print(INFO_list)
+    # print("awake")
+
+    return 1
+
+
+#General Wirte-In Function
+def writeIn(states_list,sheetid,flag,result_book,result_sheet,dateList):
+
+    single_result_row = list(range(23,36)) #End + 1
+    period_result_now = list(range(5,18))
+
+    result_col = ''
+    dateWriteIn_col = ''
+    dateWriteIn_row = 3
+
+    if sheetId == 1:
+        result_col = 'E'
+        dateWriteIn_col = 'D'
+        dateWriteIn_row = 3
+        
+
+    elif sheetId == 2:
+        result_col = 'I'
+        dateWriteIn_col = 'H'
+        dateWriteIn_row = 3
+
+    elif sheetId == 3:
+        result_col = 'M'
+        dateWriteIn_col = 'L'
+        dateWriteIn_row = 3
+
+    elif sheetId == 4:
+        result_col = 'Q'
+        dateWriteIn_col = 'P'
+        dateWriteIn_row = 3
+        
+
+
+    elif sheetId == 5:
+        result_col = 'U'
+        dateWriteIn_col = 'T'
+        dateWriteIn_row = 3
+
+    elif sheetId == 6:
+        result_col = 'Y'
+        dateWriteIn_col = 'X'
+        dateWriteIn_row = 3
+
+    elif sheetId == 7:
+        result_col = 'AC'
+        dateWriteIn_col = 'AB'
+        dateWriteIn_row = 3
+
+    elif sheetid == 8:
+        result_col = 'E'
+        dateWriteIn_col = 'D'
+        dateWriteIn_row = 21
+    
+    elif sheetid == 9:
+         result_col = 'I'
+         dateWriteIn_col = 'H'
+         dateWriteIn_row = 21
+    
+    elif sheetid == 10:
+        result_col = 'M'
+        dateWriteIn_col = 'L'
+        dateWriteIn_row = 21
+
+    elif sheetid == 11:
+        result_col = 'Q'
+        dateWriteIn_col = 'P'
+        dateWriteIn_row = 21
+
+
+
+
+    # List of Tuple(RowIndex, State)
+    MappingList_single = list(zip(single_result_row,states_list))
+    MappingList_peorid = list(zip(period_result_now,states_list))
+
+    # print("***"+str(MappingList_single))
+    # print("***"+str(MappingList_peorid))
+
+
+    if(flag == 's'):
+
+        for itm in MappingList_single:
+            
+            result_sheet[result_col+str(itm[0])] = itm[1]
+
+            result_book.save('Auto-Daily-Report.xlsx')
+
+
+    elif(flag == 'p'):
+
+        for itm in MappingList_peorid:
+            
+            result_sheet[result_col+str(itm[0])] = itm[1]
+
+            result_book.save('Auto-Daily-Report.xlsx')
+
+
+    #Fill in Dates
+    result_sheet[str(dateWriteIn_col)+str(dateWriteIn_row)] = str(dateList[sheetid-1][0])+'/'+str(dateList[sheetid-1][1])
+    result_book.save('Auto-Daily-Report.xlsx')
+
+
+
+    return 1
+
+
+#7-day Summary
+def create7daysSummary(Book,dateList):
+
+    # Define the cell range for 7-day Summary
+
+    # start_row = 23
+    # end_row = 35
+    # column = 'U'
+
+    sheet=Book['Master Form for report'] 
+    
+
+    #Calculation
+    rl = []
+    for pat in PATTERN_Bucket:
+        rl.append(create7daysSummary_SumUpSt(pat,sheet))
+        # print(create7daysSummary_SumUpSt(pat,sheet))
+
+
+    #Add-On Functions
+
+   
+
+    #Write-in 
+    create7daysSummary_WriteIn(rl,Book,sheet,dateList)
+
+
+        
+            
+
+
+    # for i,c in enumerate(PATTERN_Bucket):
+    #     print(i,c)
+
+
+
+
+    return 1
+
+def create7daysSummary_SumUpSt(thisState, sheet):
+
+
+    count = 0
+
+    COLs = ['E','I','M','Q','U','Y','AC']
+    row = 5
+
+    if(thisState == 195):
+
+        #Check all 199 related in past 7 days
+
+        #Row 5 (Col E,I,M,Q,U,Y,AC) 
+        row = 5
+        for col in COLs:
+
+            # print(col+str(row))
+            # print(sheet[f'{col}{str(row)}'].value)
+            count += sheet[f'{col}{str(row)}'].value
+
+    # print(count)
+    elif(thisState == 199):
+
+        #Row 6
+        row = 6
+        for col in COLs:
+
+            # print(col+str(row))
+            # print(sheet[f'{col}{str(row)}'].value)
+            count += sheet[f'{col}{str(row)}'].value
+
+    elif(thisState == 200):
+
+        #Row 7
+        row = 7
+        for col in COLs:
+
+            # print(col+str(row))
+            # print(sheet[f'{col}{str(row)}'].value)
+            count += sheet[f'{col}{str(row)}'].value
+
+    elif(thisState == 202):
+
+        #Row 8
+        row = 8
+        for col in COLs:
+
+            # print(col+str(row))
+            # print(sheet[f'{col}{str(row)}'].value)
+            count += sheet[f'{col}{str(row)}'].value
+
+    elif(thisState == 203):
+
+        #Row 9
+        row = 9
+        for col in COLs:
+
+            # print(col+str(row))
+            # print(sheet[f'{col}{str(row)}'].value)
+            count += sheet[f'{col}{str(row)}'].value
+
+    elif(thisState == 207):
+
+        #Row 10
+        row = 10
+        for col in COLs:
+
+            # print(col+str(row))
+            # print(sheet[f'{col}{str(row)}'].value)
+            count += sheet[f'{col}{str(row)}'].value
+
+    elif(thisState == 211):
+
+        #Row 11
+        row = 11
+        for col in COLs:
+
+            # print(col+str(row))
+            # print(sheet[f'{col}{str(row)}'].value)
+            count += sheet[f'{col}{str(row)}'].value
+
+    elif(thisState == 213):
+
+        #Row 12
+        row = 12
+        for col in COLs:
+
+            # print(col+str(row))
+            # print(sheet[f'{col}{str(row)}'].value)
+            count += sheet[f'{col}{str(row)}'].value
+
+    elif(thisState == 216):
+
+        #Row 13
+        row = 13
+        for col in COLs:
+
+            # print(col+str(row))
+            # print(sheet[f'{col}{str(row)}'].value)
+            count += sheet[f'{col}{str(row)}'].value
+
+    elif(thisState == 218):
+
+        #Row 14
+        row = 14
+        for col in COLs:
+
+            # print(col+str(row))
+            # print(sheet[f'{col}{str(row)}'].value)
+            count += sheet[f'{col}{str(row)}'].value
+
+    elif(thisState == 220):
+
+        #Row 15
+        row = 15
+        for col in COLs:
+
+            # print(col+str(row))
+            # print(sheet[f'{col}{str(row)}'].value)
+            count += sheet[f'{col}{str(row)}'].value
+
+    elif(thisState == 230):
+
+        #Row 16
+        row = 16
+        for col in COLs:
+
+            # print(col+str(row))
+            # print(sheet[f'{col}{str(row)}'].value)
+            count += sheet[f'{col}{str(row)}'].value
+
+    elif(thisState == 231):
+
+        #Row 17
+        row = 17
+        for col in COLs:
+
+            # print(col+str(row))
+            # print(sheet[f'{col}{str(row)}'].value)
+            count += sheet[f'{col}{str(row)}'].value
+        
+
+    return count
+
+def create7daysSummary_WriteIn(resultList,targetBook,targetSheet,dateList):
+
+    col = 'U'
+    row = list(range(23,36))
+
+    MappingList = list(zip(row,resultList))
+
+    for i in MappingList:
+
+        targetSheet[col+str(i[0])] = i[1]
+        targetBook.save('Auto-Daily-Report.xlsx')
+
+    # for item in resultList:
+            
+
+    #         targetSheet[result_col+str(itm[0])] = itm[1]
+
+    #         targetBook.save('Auto-Daily-Report.xlsx')
+
+    #Fill in Dates
+
+    targetSheet['T21'] = str(dateList[0][0])+'/'+str(dateList[0][1]) + ' - ' + str(dateList[6][0])+'/'+str(dateList[6][1])
+    targetBook.save('Auto-Daily-Report.xlsx')
+
+
+    return 1
+
+def alarmOn(markStateList,sheet_A_res):
+
+    # cnt_202 = 0
+    # cnt_211 = 0
+    # cnt_231 = 0
+
+    # PATTERN_Bucket = [195,199,200,202,203,207,211,213,216,218,220,230,231]
+    # res = [0] * len(PATTERN_Bucket)
+
+    res  =  []
+
+    
+
+    markStateIndex = []
+
+    #Get markState index
+    for s in markStateList:
+
+        markStateIndex.append(PATTERN_Bucket.index(s))
+
+    for si in markStateIndex:
+        res.append(sheet_A_res[si])
+        # print(sheet_A_res[si])
+
+    # for r in sheet_A_res:
+
+        
+
+        # for i in markStateIndex:
+
+
+
+      
+
+
+
+    # for i,c in enumerate(PATTERN_Bucket):
+
+    # for s in sheet_A_res:
+    #     if()
+
+    # for s in markStateList:
+
+    #     if()
+
+
+
+
+    #     print(sheet_A_res[PATTERN_Bucket.index(s)])
+
+        
+
+
+
+
+    return res
+
+
+
+
+
+#Main
+
+result_book = openpyxl.load_workbook(RootPath+'Daily_Report_Template_test.xlsx') #Get the Daily Report Template
+
+sheetId = 0
+
+for sheet in sheet_period_date_Bucket:
+
+    if(sheetId > 1):    
+        result_book = openpyxl.load_workbook('Auto-Daily-Report.xlsx')
+
+    
+    
+    result_sheet = result_book['Master Form for report'] 
+
+    sheetId += 1
+
+    sheet_A_res = countState(sheet,'p')
+
+    print('!!!'+str(sheet_A_res))
+
+    # print("alarm"+str(alarmOn([202,211,231],sheet_A_res)))
+
+    #if([x,x,x] not all 0s)
+    if(not all(x == 0 for x in alarmOn(MARK_States,sheet_A_res))):
+        pullDetails(sheet,MARK_States,sheetId)
+
+    writeIn(sheet_A_res,sheetId,'p',result_book,result_sheet,dl)
+
+
+
+for sheet in sheet_single_date_Bucket:
+
+
+    result_sheet = result_book['Master Form for report'] 
+        
+
+    sheetId += 1
+
+    # sheet_id = f''
+
+    print(countState(sheet,'s'))
+
+    writeIn(countState(sheet,'s'),sheetId,'s',result_book,result_sheet,dl)
+
+
+#Create 7-day Summary
+
+create7daysSummary(result_book,dl)
+
+
+
+
+
+
+        
+        
+        
+
+
+#     # print(checkState(sheet))
+   
+
+
+
+
+
+
+
+
+# Define the cell range you want to sum (e.g., A1 to A10)
+# start_row = 1
+# end_row = workbook_single_date_1['Order List'].max_row
+# column = 'C'
+
+# Pattern
+# pattern = r'\d{2}/\d{2}/\d{4}'
+
+# match_state_203 = 203
+
+# Calculate the sum of the specified cells
+# total = 0
+
+
+
+
+# sheet['D73' ] = count
+
+# Create a new sheet for the result
+# result_book = openpyxl.load_workbook('Daily_Report_test.xlsx')
+# result_sheet = result_book['Master Form for report'] 
+# result_sheet['D73'] = f'{month_number}/{date_number}'
+
+# result_sheet['E79'] = count_203
+
+
+# Write the total to the new sheet
+# result_sheet['A1'] = 'Total'
+# result_sheet['B1'] = total
+
+# Save the modified workbook
+
+# Apply an autofilter to the entire sheet (all columns)
+# sheet.auto_filter.ref = sheet.dimensions
+
+
+# workbook.save('order_lists_test.xlsx')
+
+
+# print(count_203)
