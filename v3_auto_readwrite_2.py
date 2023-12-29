@@ -142,7 +142,7 @@ def displayBatchNum(d_b_mapList):
 def countStates(emptyTotal):
 
     #Get downloaded order sheet
-    sheet = openpyxl.load_workbook(RootPath+'V3/order_list.xlsx')['Order List']
+    sheet = openpyxl.load_workbook(RootPath+'V3/order_lists.xlsx')['Order List']
 
 
     # Define the cell range 
@@ -308,7 +308,43 @@ DATE_INPUT = input("Enter report-generating date (MMDDYYYY): ")
 try:
 
     
-    print()
+    #--[Get Date]--
+    DATE_LIST = getDate()
+    # print(getDate())
+    
+    #--[Generate Date-Sub-batch Mapping List]--
+    TOTAL = genMapList()
+    # print(genMapList())
+    
+    
+    
+    print('\n')
+    print('W-E-L-C-O-M-E')
+    print('\n')
+    date = datetime.strptime(DATE_INPUT, "%m%d%Y")
+    print(f'Daily Report Generating Day: {date.month}-{date.day}-{date.year}')
+    date_start = date - timedelta(days=11)
+    date_end = date - timedelta(days=5)
+    print('\n')
+    
+    #--[Display mapping list]--
+    displayBatchNum(TOTAL)
+    
+    
+    #--[Input Break]--
+    #Waiting for getting dowload sheet done
+    flag = input("Press 'Y' if you finished downloading the order sheet, 'N' for quit program: ")
+    
+    if(flag == 'N'):
+        quit()
+    
+    #--[Count States For Each Sheet]--
+    TOTAL  = countStates(TOTAL)
+    # print(TOTAL)
+    
+    #--[Write In]--
+    writeIn()
+
 
 
 except Exception as e:
@@ -319,41 +355,5 @@ except Exception as e:
 
 
 
-#--[Get Date]--
-DATE_LIST = getDate()
-# print(getDate())
-
-#--[Generate Date-Sub-batch Mapping List]--
-TOTAL = genMapList()
-# print(genMapList())
-
-
-
-print('\n')
-print('W-E-L-C-O-M-E')
-print('\n')
-date = datetime.strptime(DATE_INPUT, "%m%d%Y")
-print(f'Daily Report Generating Day: {date.month}-{date.day}-{date.year}')
-date_start = date - timedelta(days=11)
-date_end = date - timedelta(days=5)
-print('\n')
-
-#--[Display mapping list]--
-displayBatchNum(TOTAL)
-
-
-#--[Input Break]--
-#Waiting for getting dowload sheet done
-flag = input("Press 'Y' if you finished downloading the order sheet, 'N' for quit program: ")
-
-if(flag == 'N'):
-    quit()
-
-#--[Count States For Each Sheet]--
-TOTAL  = countStates(TOTAL)
-# print(TOTAL)
-
-#--[Write In]--
-writeIn()
 
 
